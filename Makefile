@@ -1,6 +1,7 @@
+obj-m := nv-p2p-dummy.o
 obj-m += nv_peer_mem.o
 
-PHONY += all clean install uninstall gen_nv_symvers
+PHONY += all clean install uninstall #gen_nv_symvers
 .PHONY: $(PHONY)
 
 KVER := $(shell uname -r)
@@ -13,6 +14,19 @@ MODULES_DIR := /lib/modules/$(KVER)
 KDIR := $(MODULES_DIR)/build
 MODULE_DESTDIR := $(MODULES_DIR)/extra/
 DEPMOD := /sbin/depmod
+
+# Should be expanded for cross-compiling
+HOST_ARCH   := $(shell uname -m)
+TARGET_ARCH ?= $(HOST_ARCH)
+ifneq ($(TARGET_ARCH),$(HOST_ARCH))
+	$(error ERROR - cross compiling not allowed yet)
+endif
+ifeq (x86_64, $(TARGET_ARCH))
+ccflags-y += -DARCH_X86_64
+endif
+ifeq (aarch64, $(TARGET_ARCH))
+ccflags-y += -DARCH_AARCH64
+endif
 
 # GCC earlier than 4.6.0 will build modules which require 'mcount',
 # and this symbol will not be available in the kernel if the kernel was
@@ -43,15 +57,19 @@ endif
 #
 # Get nv-p2p.h header file of the currently installed CUDA version.
 # Try to get it based on available nvidia module version (just in case there are sources for couple of versions)
-nv_version=$(shell /sbin/modinfo -F version -k $(KVER) nvidia 2>/dev/null)
-nv_sources=$(shell /bin/ls -d /usr/src/nvidia-$(nv_version)/ 2>/dev/null)
-ifneq ($(shell test -d "$(nv_sources)" && echo "true" || echo "" ),)
-NV_P2P_H=$(shell /bin/ls -1 $(nv_sources)/nvidia/nv-p2p.h 2>/dev/null | tail -1)
+ifeq (aarch64, $(TARGET_ARCH))
+	NV_P2P_H=/usr/src/linux-headers-$(KVER)/nvgpu/include/linux/nv-p2p.h
 else
-NV_P2P_H=$(shell /bin/ls -1 /usr/src/nvidia-*/nvidia/nv-p2p.h 2>/dev/null | tail -1)
+	nv_version=$(shell /sbin/modinfo -F version -k $(KVER) nvidia 2>/dev/null)
+	nv_sources=$(shell /bin/ls -d /usr/src/nvidia-$(nv_version)/ 2>/dev/null)
+	ifneq ($(shell test -d "$(nv_sources)" && echo "true" || echo "" ),)
+		NV_P2P_H=$(shell /bin/ls -1 $(nv_sources)/nvidia/nv-p2p.h 2>/dev/null | tail -1)
+	else
+		NV_P2P_H=$(shell /bin/ls -1 /usr/src/nvidia-*/nvidia/nv-p2p.h 2>/dev/null | tail -1)
+	endif
 endif
 
-all: gen_nv_symvers
+all: #gen_nv_symvers
 ifneq ($(shell test -e "$(NV_P2P_H)" && echo "true" || echo "" ),)
 	$(info Found $(NV_P2P_H))
 	/bin/cp -f $(NV_P2P_H) $(PWD)/nv-p2p.h
@@ -76,5 +94,5 @@ uninstall:
 	/bin/rm -f $(DESTDIR)/$(MODULE_DESTDIR)/nv_peer_mem.ko
 	if [ ! -n "$(DESTDIR)" ]; then $(DEPMOD) -r -ae $(KVER);fi;
 
-gen_nv_symvers:
-	$(PWD)/create_nv.symvers.sh $(KVER)
+#gen_nv_symvers:
+#	$(PWD)/create_nv.symvers.sh $(KVER)

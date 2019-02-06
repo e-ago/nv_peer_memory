@@ -235,8 +235,7 @@ static int nv_mem_acquire(unsigned long addr, size_t size, void *peer_mem_privat
 		goto err;
 
 #if defined(ARCH_AARCH64)
-	ret = nvidia_p2p_put_pages(nv_mem_context->page_virt_start, 
-				   nv_mem_context->page_table);
+	ret = nvidia_p2p_put_pages(nv_mem_context->page_table);
 #else
 	ret = nvidia_p2p_put_pages(0, 0, nv_mem_context->page_virt_start,
 				   nv_mem_context->page_table);
@@ -296,7 +295,7 @@ static int nv_dma_map(struct sg_table *sg_head, void *context,
 		}
 
 		#if defined(ARCH_AARCH64)
-			ret = nvidia_p2p_dma_map_pages(dma_device, page_table, &dma_mapping);
+			ret = nvidia_p2p_map_pages(dma_device, page_table, &dma_mapping);
 		#else
 			ret = nvidia_p2p_dma_map_pages(pdev, page_table, &dma_mapping, DMA_BIDIRECTIONAL);
 		#endif
@@ -412,8 +411,7 @@ static void nv_mem_put_pages(struct sg_table *sg_head, void *context)
 	if (READ_ONCE(nv_mem_context->is_callback))
 		goto out;
 #if defined(ARCH_AARCH64)
-	ret = nvidia_p2p_put_pages(nv_mem_context->page_virt_start,
-				   nv_mem_context->page_table);
+	ret = nvidia_p2p_put_pages(nv_mem_context->page_table);
 #else
 	ret = nvidia_p2p_put_pages(0, 0, nv_mem_context->page_virt_start,
 				   nv_mem_context->page_table);

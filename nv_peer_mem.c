@@ -295,9 +295,9 @@ static int nv_dma_map(struct sg_table *sg_head, void *context,
 		}
 
 		#if defined(ARCH_AARCH64)
-			ret = nvidia_p2p_map_pages(dma_device, page_table, &dma_mapping);
+			ret = nvidia_p2p_map_pages(dma_device, page_table, &dma_mapping, DMA_BIDIRECTIONAL);
 		#else
-			ret = nvidia_p2p_dma_map_pages(pdev, page_table, &dma_mapping, DMA_BIDIRECTIONAL);
+			ret = nvidia_p2p_dma_map_pages(pdev, page_table, &dma_mapping);
 		#endif
 		if (ret) {
 			peer_err("nv_dma_map -- error %d while calling nvidia_p2p_dma_map_pages()\n", ret);
@@ -317,7 +317,7 @@ static int nv_dma_map(struct sg_table *sg_head, void *context,
 		ret = sg_alloc_table(sg_head, dma_mapping->entries, GFP_KERNEL);
 		if (ret) {
 			#if defined(ARCH_AARCH64)
-				nvidia_p2p_dma_unmap_pages(dma_mapping);
+				nvidia_p2p_unmap_pages(dma_mapping);
 			#else
 				nvidia_p2p_dma_unmap_pages(pdev, page_table, dma_mapping);
 			#endif

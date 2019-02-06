@@ -389,7 +389,7 @@ static int nv_dma_unmap(struct sg_table *sg_head, void *context,
 		struct pci_dev *pdev = to_pci_dev(dma_device);
 		if (nv_mem_context->dma_mapping)
 			#if defined(ARCH_AARCH64)
-				nvidia_p2p_dma_unmap_pages(nv_mem_context->dma_mapping);
+				nvidia_p2p_unmap_pages(nv_mem_context->dma_mapping);
 			#else
 				nvidia_p2p_dma_unmap_pages(pdev, nv_mem_context->page_table,
 						   nv_mem_context->dma_mapping);

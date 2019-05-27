@@ -1,7 +1,9 @@
-obj-m := nv-p2p-dummy.o
+ifeq (x86_64, $(TARGET_ARCH))
+	obj-m := nv-p2p-dummy.o
+endif
 obj-m += nv_peer_mem.o
 
-PHONY += all clean install uninstall #gen_nv_symvers
+PHONY += all clean install uninstall gen_nv_symvers
 .PHONY: $(PHONY)
 
 KVER := $(shell uname -r)
@@ -96,4 +98,4 @@ uninstall:
 	if [ ! -n "$(DESTDIR)" ]; then $(DEPMOD) -r -ae $(KVER);fi;
 
 gen_nv_symvers:
-	$(PWD)/create_nv.symvers.sh $(KVER)
+	$(PWD)/create_nv.symvers.sh $(KVER) $(TARGET_ARCH)

@@ -29,6 +29,7 @@ SCRIPTPATH=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)
 
 MOD_SYMVERS=${SCRIPTPATH}/nv.symvers
 KVER=${1:-$(uname -r)}
+TARGET_ARCH=${2}
 
 # Create empty symvers file
 echo -n "" > $MOD_SYMVERS
@@ -71,7 +72,12 @@ try_compile_nvidia_sources()
 }
 
 nvidia_mod=
-for mod in nvidia $(ls /lib/modules/$KVER/updates/dkms/nvidia*.ko* 2>/dev/null)
+nvidia_mod_path=/lib/modules/$KVER/updates/dkms/nvidia
+ifeq (aarch64, $(TARGET_ARCH))
+    nvidia_mod_path=/lib/modules/$KVER/kernel/drivers/gpu/nvgpu/nvgpu
+endif
+
+for mod in nvidia $(ls $nvidia_mod_path*.ko* 2>/dev/null)
 do
 	nvidia_mod=$(/sbin/modinfo -F filename -k "$KVER" $mod 2>/dev/null)
 	if [ ! -e "$nvidia_mod" ]; then

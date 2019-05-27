@@ -58,7 +58,8 @@ endif
 # Get nv-p2p.h header file of the currently installed CUDA version.
 # Try to get it based on available nvidia module version (just in case there are sources for couple of versions)
 ifeq (aarch64, $(TARGET_ARCH))
-	NV_P2P_H=/usr/src/linux-headers-$(KVER)/nvgpu/include/linux/nv-p2p.h
+	#Warning: not dynamic OS name
+	NV_P2P_H=/usr/src/linux-headers-$(KVER)-ubuntu18.04_aarch64/nvgpu/include/linux/nv-p2p.h
 else
 	nv_version=$(shell /sbin/modinfo -F version -k $(KVER) nvidia 2>/dev/null)
 	nv_sources=$(shell /bin/ls -d /usr/src/nvidia-$(nv_version)/ 2>/dev/null)
@@ -69,7 +70,7 @@ else
 	endif
 endif
 
-all: #gen_nv_symvers
+all: gen_nv_symvers
 ifneq ($(shell test -e "$(NV_P2P_H)" && echo "true" || echo "" ),)
 	$(info Found $(NV_P2P_H))
 	/bin/cp -f $(NV_P2P_H) $(PWD)/nv-p2p.h
@@ -94,5 +95,5 @@ uninstall:
 	/bin/rm -f $(DESTDIR)/$(MODULE_DESTDIR)/nv_peer_mem.ko
 	if [ ! -n "$(DESTDIR)" ]; then $(DEPMOD) -r -ae $(KVER);fi;
 
-#gen_nv_symvers:
-#	$(PWD)/create_nv.symvers.sh $(KVER)
+gen_nv_symvers:
+	$(PWD)/create_nv.symvers.sh $(KVER)

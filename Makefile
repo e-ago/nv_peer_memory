@@ -1,6 +1,3 @@
-ifeq (x86_64, $(TARGET_ARCH))
-	obj-m := nv-p2p-dummy.o
-endif
 obj-m += nv_peer_mem.o
 
 PHONY += all clean install uninstall gen_nv_symvers
